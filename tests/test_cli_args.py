@@ -75,12 +75,14 @@ def test_build_pipeline_config_maps_pipeline_fields() -> None:
     ffmpeg = object()
     provider = object()
     minutes_llm = object()
+    pandoc = object()
     config = cli.build_pipeline_config(
         args,
         normalizer=normalizer,
         ffmpeg=ffmpeg,
         transcription_provider=provider,
         minutes_llm=minutes_llm,
+        pandoc=pandoc,
     )
 
     assert isinstance(config, PipelineConfig)
@@ -89,6 +91,7 @@ def test_build_pipeline_config_maps_pipeline_fields() -> None:
     assert config.ffmpeg is ffmpeg
     assert config.transcription_provider is provider
     assert config.minutes_llm is minutes_llm
+    assert config.docx_exporter is pandoc
     assert config.chunk_seconds == 45
     assert config.prompt_path == Path("prompt.md")
     assert config.prompt_version == "v2"
@@ -110,6 +113,7 @@ def test_run_from_args_delegates_to_orchestrator_and_returns_deterministic_paths
             "ffmpeg": object(),
             "transcription_provider": object(),
             "minutes_llm": object(),
+            "pandoc": object(),
         }
 
     def fake_run_pipeline(input_path, config):  # type: ignore[no-untyped-def]
@@ -136,6 +140,12 @@ def test_run_from_args_delegates_to_orchestrator_and_returns_deterministic_paths
             "16000",
             "--language",
             "en",
+            "--export-docx",
+            "--reference-docx",
+            "templates/reference.docx",
+            "--docx-toc",
+            "--docx-toc-depth",
+            "3",
         ]
     )
     result = cli.run_from_args(args)
@@ -146,6 +156,10 @@ def test_run_from_args_delegates_to_orchestrator_and_returns_deterministic_paths
     assert captured["sample_rate"] == 16000
     assert captured["input_path"] == Path("audio.wav")
     assert isinstance(captured["config"], PipelineConfig)
+    assert captured["config"].export_minutes_docx is True
+    assert captured["config"].reference_docx_path == Path("templates/reference.docx")
+    assert captured["config"].docx_toc is True
+    assert captured["config"].docx_toc_depth == 3
     assert result.manifest_path == Path("outputs") / "manifest.json"
     assert result.output_dir == Path("outputs")
 

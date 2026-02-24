@@ -82,6 +82,8 @@ class ArtifactRefs:
 
     minutes_md_path: str | None = None
     minutes_sha256: str | None = None
+    minutes_docx_path: str | None = None
+    minutes_docx_sha256: str | None = None
     minutes_markdown: str | None = None
     minutes_model: str | None = None
     minutes_prompt_version: str | None = None

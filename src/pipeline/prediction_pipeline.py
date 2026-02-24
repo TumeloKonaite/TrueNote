@@ -10,8 +10,9 @@ from src.adapters.ffmpeg import FfmpegAdapter
 from src.adapters.transcription import TranscriptionProvider
 from src.components.chunking import chunk_audio
 from src.components.minutes import MinutesLLM, generate_minutes
+from src.components.minutes_export import MarkdownDocxExporter, export_minutes_docx
 from src.components.transcription import transcribe_chunks
-from src.contracts.artifacts import AudioArtifact, ChunksArtifact, MinutesArtifact, TranscriptArtifact
+from src.contracts.artifacts import AudioArtifact, ChunksArtifact, DocxArtifact, MinutesArtifact, TranscriptArtifact
 from src.contracts.errors import InputValidationError, PipelineError
 from src.contracts.manifest import Manifest, StepRecord
 from src.pipeline.io import build_pipeline_paths, manifest_path_ref, persist_manifest, write_json_file, write_text_file
@@ -34,9 +35,14 @@ class PipelineConfig:
     transcription_provider: TranscriptionProvider
     minutes_llm: MinutesLLM
     chunk_seconds: int
+    docx_exporter: MarkdownDocxExporter | None = None
     prompt_path: Path | None = None
     prompt_version: str | None = None
     minutes_extra_context: dict[str, str] | None = None
+    export_minutes_docx: bool = False
+    reference_docx_path: Path | None = None
+    docx_toc: bool = False
+    docx_toc_depth: int = 2
     include_error_traceback: bool = False
     run_id: str | None = None
 
@@ -50,6 +56,7 @@ def run(input_path: Path, config: PipelineConfig) -> ArtifactManifest:
     chunks: ChunksArtifact | None = None
     transcript: TranscriptArtifact | None = None
     minutes: MinutesArtifact | None = None
+    minutes_docx: DocxArtifact | None = None
 
     def fail_step(step: StepRecord, exc: Exception, *, step_context: dict[str, Any] | None = None) -> None:
         error_context = {
@@ -287,6 +294,50 @@ def run(input_path: Path, config: PipelineConfig) -> ArtifactManifest:
         )
     except Exception as exc:
         fail_step(step, exc, step_context=write_context)
+
+    # 7. export docx (optional)
+    export_docx_context = {
+        "enabled": config.export_minutes_docx,
+        "minutes_md_path": str(paths.minutes_md_path),
+        "minutes_docx_path": str(paths.minutes_docx_path),
+        "reference_docx_path": str(config.reference_docx_path) if config.reference_docx_path is not None else None,
+        "toc": config.docx_toc,
+        "toc_depth": config.docx_toc_depth,
+    }
+    step = start_step("export_docx", step_context=export_docx_context)
+    try:
+        if not config.export_minutes_docx:
+            step.finish(
+                status="skipped",
+                meta={"context": _json_safe({**export_docx_context, "reason": "disabled"})},
+            )
+            persist_manifest(manifest, paths.manifest_path)
+            return manifest
+
+        if config.docx_exporter is None:
+            raise PipelineError("docx export requested but no docx_exporter was configured")
+
+        minutes_docx = export_minutes_docx(
+            paths.minutes_md_path,
+            paths.minutes_docx_path,
+            exporter=config.docx_exporter,
+            reference_docx_path=config.reference_docx_path,
+            toc=config.docx_toc,
+            toc_depth=config.docx_toc_depth,
+        )
+        manifest.artifacts.minutes_docx_path = manifest_path_ref(minutes_docx.path, base_dir=paths.run_dir)
+        manifest.artifacts.minutes_docx_sha256 = minutes_docx.sha256
+
+        complete_step(
+            step,
+            step_context=export_docx_context,
+            artifacts={
+                "minutes_docx_path": manifest.artifacts.minutes_docx_path,
+                "minutes_docx_sha256": manifest.artifacts.minutes_docx_sha256,
+            },
+        )
+    except Exception as exc:
+        fail_step(step, exc, step_context=export_docx_context)
 
     return manifest
 

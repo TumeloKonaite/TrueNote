@@ -9,7 +9,8 @@ from src.contracts.errors import InputValidationError, MinutesGenerationError
 from src.utils.hashing import sha256_file
 
 
-DEFAULT_MINUTES_PROMPT_PATH = Path(__file__).resolve().parents[1] / "prompts" / "minutes_prompt.md"
+DEFAULT_MINUTES_PROMPT_VERSION = "minutes_v1"
+DEFAULT_MINUTES_PROMPT_PATH = Path(__file__).resolve().parents[1] / "prompts" / f"{DEFAULT_MINUTES_PROMPT_VERSION}.md"
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,6 +86,8 @@ def generate_minutes(
     meta["prompt_path"] = str(loaded_prompt.path)
     meta["prompt_hash"] = loaded_prompt.prompt_hash
     effective_prompt_version = prompt_version if prompt_version is not None else llm_result.prompt_version
+    if effective_prompt_version is None and loaded_prompt.path.resolve() == DEFAULT_MINUTES_PROMPT_PATH.resolve():
+        effective_prompt_version = DEFAULT_MINUTES_PROMPT_VERSION
     if effective_prompt_version is not None:
         meta["prompt_version"] = effective_prompt_version
 
@@ -99,6 +102,7 @@ def generate_minutes(
 
 __all__ = [
     "DEFAULT_MINUTES_PROMPT_PATH",
+    "DEFAULT_MINUTES_PROMPT_VERSION",
     "LoadedMinutesPrompt",
     "MinutesLLM",
     "generate_minutes",

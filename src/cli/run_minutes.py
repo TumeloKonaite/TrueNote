@@ -9,6 +9,7 @@ from typing import Any, Sequence
 
 from src.adapters.ffmpeg import build_ffmpeg_chunk_cmd, build_ffmpeg_normalize_cmd
 from src.adapters.openai_transcription import OpenAITranscriptionAdapter
+from src.adapters.pandoc import PandocAdapter
 from src.components.minutes import MinutesLLM
 from src.contracts.artifacts import AudioArtifact, MinutesArtifact, TranscriptArtifact
 from src.contracts.errors import FfmpegError
@@ -18,6 +19,8 @@ from src.utils.hashing import sha256_file
 
 
 type Argv = Sequence[str]
+
+DEFAULT_MINUTES_MODEL = "gpt-4.1-mini"
 
 
 @dataclass(frozen=True, slots=True)
@@ -186,7 +189,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=2,
         help="Provider retries per chunk (>= 0).",
     )
-    parser.add_argument("--minutes-model", default="gpt-4o-mini", help="Minutes generation model.")
+    parser.add_argument("--minutes-model", default=DEFAULT_MINUTES_MODEL, help="Minutes generation model.")
     parser.add_argument("--prompt-path", type=Path, default=None, help="Minutes prompt file path.")
     parser.add_argument("--prompt-version", default=None, help="Prompt version recorded in the manifest.")
     parser.add_argument(
@@ -195,6 +198,28 @@ def build_parser() -> argparse.ArgumentParser:
         type=_kv_pair,
         default=[],
         help="Additional minutes context as KEY=VALUE (repeatable).",
+    )
+    parser.add_argument(
+        "--export-docx",
+        action="store_true",
+        help="Convert generated minutes.md to minutes.docx using pandoc.",
+    )
+    parser.add_argument(
+        "--reference-docx",
+        type=Path,
+        default=None,
+        help="Optional Pandoc reference .docx for styling.",
+    )
+    parser.add_argument(
+        "--docx-toc",
+        action="store_true",
+        help="Include a table of contents in DOCX export.",
+    )
+    parser.add_argument(
+        "--docx-toc-depth",
+        type=_positive_int,
+        default=2,
+        help="TOC depth for DOCX export (used with --docx-toc).",
     )
     parser.add_argument("--run-id", default=None, help="Optional deterministic run identifier.")
     parser.add_argument(
@@ -216,6 +241,7 @@ def build_pipeline_config(
     ffmpeg: Any,
     transcription_provider: Any,
     minutes_llm: Any,
+    pandoc: Any,
 ) -> PipelineConfig:
     return PipelineConfig(
         output_dir=Path(args.output_dir),
@@ -224,9 +250,14 @@ def build_pipeline_config(
         transcription_provider=transcription_provider,
         minutes_llm=minutes_llm,
         chunk_seconds=int(args.chunk_seconds),
+        docx_exporter=pandoc,
         prompt_path=Path(args.prompt_path) if args.prompt_path is not None else None,
         prompt_version=args.prompt_version,
         minutes_extra_context=_minutes_extra_context_dict(args.minutes_extra_context),
+        export_minutes_docx=bool(args.export_docx),
+        reference_docx_path=Path(args.reference_docx) if args.reference_docx is not None else None,
+        docx_toc=bool(args.docx_toc),
+        docx_toc_depth=int(args.docx_toc_depth),
         include_error_traceback=bool(args.include_error_traceback),
         run_id=args.run_id,
     )
@@ -266,6 +297,7 @@ def _build_runtime_dependencies(args: argparse.Namespace) -> dict[str, Any]:
             max_retries_per_chunk=int(args.transcription_max_retries),
         ),
         "minutes_llm": _OpenAIMinutesLLM(client, model=args.minutes_model),
+        "pandoc": PandocAdapter(),
     }
 
 

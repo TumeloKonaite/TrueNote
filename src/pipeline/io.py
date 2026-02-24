@@ -19,6 +19,7 @@ class PipelinePaths:
     transcript_path: Path
     transcript_segments_path: Path
     minutes_md_path: Path
+    minutes_docx_path: Path
 
 
 def build_pipeline_paths(
@@ -30,6 +31,7 @@ def build_pipeline_paths(
     transcript_filename: str = "transcript.txt",
     transcript_segments_filename: str = "transcript_segments.json",
     minutes_filename: str = "minutes.md",
+    minutes_docx_filename: str = "minutes.docx",
 ) -> PipelinePaths:
     run_dir = Path(run_dir)
     return PipelinePaths(
@@ -40,6 +42,7 @@ def build_pipeline_paths(
         transcript_path=run_dir / transcript_filename,
         transcript_segments_path=run_dir / transcript_segments_filename,
         minutes_md_path=run_dir / minutes_filename,
+        minutes_docx_path=run_dir / minutes_docx_filename,
     )
 
 

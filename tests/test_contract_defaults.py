@@ -4,6 +4,7 @@ import unittest
 from src.contracts.artifacts import (
     AudioArtifact,
     ChunksArtifact,
+    DocxArtifact,
     MinutesArtifact,
     TranscriptArtifact,
     TranscriptSegment,
@@ -35,6 +36,9 @@ class ArtifactDefaultsTests(unittest.TestCase):
         minutes = MinutesArtifact(markdown="# hi", model="gpt", prompt_version="v1")
         self.assertIsNone(minutes.tokens)
         self.assertIsNone(minutes.meta)
+
+        docx = DocxArtifact(path=Path("minutes.docx"), sha256="1" * 64)
+        self.assertIsNone(docx.meta)
 
 
 if __name__ == "__main__":
