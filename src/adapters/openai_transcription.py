@@ -230,9 +230,6 @@ class OpenAITranscriptionAdapter(TranscriptionProvider):
         segments = _normalize_segments(_field(response, "segments"))
         if not text and segments:
             text = " ".join(seg.text for seg in segments if seg.text).strip()
-        if not text:
-            raise ProviderResponseError("OpenAI transcription response missing text")
-
         return _NormalizedChunkTranscript(
             text=text,
             language=_coerce_text(_field(response, "language")) or None,
