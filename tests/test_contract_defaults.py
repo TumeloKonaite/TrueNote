@@ -1,7 +1,13 @@
 from pathlib import Path
 import unittest
 
-from src.contracts.artifacts import AudioArtifact, ChunksArtifact, MinutesArtifact, TranscriptArtifact
+from src.contracts.artifacts import (
+    AudioArtifact,
+    ChunksArtifact,
+    MinutesArtifact,
+    TranscriptArtifact,
+    TranscriptSegment,
+)
 
 
 class ArtifactDefaultsTests(unittest.TestCase):
@@ -16,7 +22,15 @@ class ArtifactDefaultsTests(unittest.TestCase):
 
         transcript = TranscriptArtifact(text="hi", provider="openai", model="gpt", chunk_count=1)
         self.assertIsNone(transcript.language)
+        self.assertIsNone(transcript.segments)
+        self.assertIsNone(transcript.duration_s)
         self.assertIsNone(transcript.timings)
+        self.assertIsNone(transcript.meta)
+
+        segment = TranscriptSegment(index=0, text="hello")
+        self.assertIsNone(segment.start_s)
+        self.assertIsNone(segment.end_s)
+        self.assertIsNone(segment.chunk_index)
 
         minutes = MinutesArtifact(markdown="# hi", model="gpt", prompt_version="v1")
         self.assertIsNone(minutes.tokens)
