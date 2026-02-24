@@ -1,4 +1,4 @@
-from .artifacts import AudioArtifact, ChunksArtifact, MinutesArtifact, TranscriptArtifact
+from .artifacts import AudioArtifact, ChunksArtifact, MinutesArtifact, TranscriptArtifact, TranscriptSegment
 from .errors import (
     ChunkingError,
     ComponentError,
@@ -7,6 +7,8 @@ from .errors import (
     InputValidationError,
     MinutesGenerationError,
     PipelineError,
+    ProviderResponseError,
+    ProviderRetryExhaustedError,
     TranscriptionError,
 )
 from .manifest import ArtifactRefs, Manifest, StepRecord, should_skip_step
@@ -15,6 +17,7 @@ __all__ = [
     "AudioArtifact",
     "ChunksArtifact",
     "TranscriptArtifact",
+    "TranscriptSegment",
     "MinutesArtifact",
     "ArtifactRefs",
     "Manifest",
@@ -28,4 +31,6 @@ __all__ = [
     "ChunkingError",
     "TranscriptionError",
     "MinutesGenerationError",
+    "ProviderResponseError",
+    "ProviderRetryExhaustedError",
 ]

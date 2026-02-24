@@ -23,13 +23,25 @@ class ChunksArtifact:
 
 
 @dataclass(frozen=True, slots=True)
+class TranscriptSegment:
+    index: int
+    text: str
+    start_s: float | None = None
+    end_s: float | None = None
+    chunk_index: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class TranscriptArtifact:
     text: str
     provider: str
     model: str
     chunk_count: int
     language: str | None = None
+    segments: list[TranscriptSegment] | None = None
+    duration_s: float | None = None
     timings: dict[str, Any] | None = None
+    meta: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True, slots=True)

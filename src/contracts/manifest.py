@@ -75,6 +75,10 @@ class ArtifactRefs:
     transcript_provider: str | None = None
     transcript_model: str | None = None
     transcript_language: str | None = None
+    transcript_chunk_count: int | None = None
+    transcript_duration_s: float | None = None
+    transcript_segments_path: str | None = None
+    transcript_segments_count: int | None = None
 
     minutes_md_path: str | None = None
     minutes_sha256: str | None = None

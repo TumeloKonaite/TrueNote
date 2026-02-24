@@ -39,3 +39,11 @@ class ExternalToolError(FfmpegError):
 
 class ProviderError(TranscriptionError):
     """Compatibility alias for provider/API failures."""
+
+
+class ProviderResponseError(ProviderError):
+    """Raised when a provider returns an unexpected response shape."""
+
+
+class ProviderRetryExhaustedError(ProviderError):
+    """Raised when adapter-managed provider retries are exhausted."""
