@@ -150,6 +150,38 @@ class OpenAITranscriptionAdapterTests(unittest.TestCase):
                 )
             )
 
+    def test_openai_adapter_tolerates_empty_chunk_response_and_continues(self) -> None:
+        client = _FakeClient(
+            [
+                {
+                    "text": "",
+                    "language": "en",
+                    "duration": 29.9,
+                    "segments": [],
+                },
+                {
+                    "text": "spoken content",
+                    "language": "en",
+                    "duration": 28.0,
+                    "segments": [
+                        {"text": "spoken content", "start": 0.0, "end": 1.2},
+                    ],
+                },
+            ]
+        )
+        adapter = OpenAITranscriptionAdapter(client, model="whisper-1", language="en")
+
+        transcript = transcribe_chunks(self._chunks_artifact(), adapter)
+
+        self.assertEqual(transcript.text, "spoken content")
+        self.assertEqual(transcript.chunk_count, 2)
+        self.assertEqual(transcript.language, "en")
+        self.assertIsNotNone(transcript.segments)
+        assert transcript.segments is not None
+        self.assertEqual(len(transcript.segments), 1)
+        self.assertEqual(transcript.segments[0].chunk_index, 1)
+        self.assertAlmostEqual(transcript.segments[0].start_s or 0.0, 30.0, places=3)
+
     def test_component_enforces_provider_contract_chunk_count(self) -> None:
         with self.assertRaises(TranscriptionError):
             transcribe_chunks(self._chunks_artifact(), _WrongCountProvider())

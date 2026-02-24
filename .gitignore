@@ -5,6 +5,32 @@ build/
 dist/
 wheels/
 *.egg-info
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
 
 # Virtual environments
-.venv
+.venv/
+venv/
+
+# Local environment files
+.env
+.env.*
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Editor/OS noise
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+
+# Generated pipeline outputs (audio chunks, manifests, transcripts, minutes)
+artifacts/
+
+# Test scratch dirs
+tests/.tmp_*/
