@@ -34,6 +34,7 @@ class ArtifactDefaultsTests(unittest.TestCase):
 
         minutes = MinutesArtifact(markdown="# hi", model="gpt", prompt_version="v1")
         self.assertIsNone(minutes.tokens)
+        self.assertIsNone(minutes.meta)
 
 
 if __name__ == "__main__":
