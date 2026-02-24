@@ -48,5 +48,6 @@ class TranscriptArtifact:
 class MinutesArtifact:
     markdown: str
     model: str
-    prompt_version: str
+    prompt_version: str | None = None
     tokens: dict[str, Any] | None = None
+    meta: dict[str, Any] | None = None

@@ -85,6 +85,8 @@ class ArtifactRefs:
     minutes_markdown: str | None = None
     minutes_model: str | None = None
     minutes_prompt_version: str | None = None
+    minutes_prompt_path: str | None = None
+    minutes_prompt_hash: str | None = None
 
 
 @dataclass(slots=True)
