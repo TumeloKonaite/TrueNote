@@ -21,7 +21,7 @@ class StepRecord:
     attempts: int = 0
     meta: dict[str, Any] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
-    error: str | None = None
+    error: str | dict[str, Any] | None = None
     error_type: str | None = None
 
     def start(self, *, at_s: float | None = None) -> None:
@@ -34,7 +34,7 @@ class StepRecord:
         *,
         status: StepStatus,
         at_s: float | None = None,
-        error: str | None = None,
+        error: str | dict[str, Any] | None = None,
         error_type: str | None = None,
         meta: dict[str, Any] | None = None,
     ) -> None:
