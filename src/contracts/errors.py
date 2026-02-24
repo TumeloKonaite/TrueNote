@@ -33,6 +33,10 @@ class MinutesGenerationError(ComponentError):
     """Raised when minutes generation fails."""
 
 
+class PandocError(ComponentError):
+    """Raised when pandoc resolution or conversion fails."""
+
+
 class ExternalToolError(FfmpegError):
     """Compatibility alias for external tool failures."""
 

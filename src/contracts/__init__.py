@@ -1,4 +1,4 @@
-from .artifacts import AudioArtifact, ChunksArtifact, MinutesArtifact, TranscriptArtifact, TranscriptSegment
+from .artifacts import AudioArtifact, ChunksArtifact, DocxArtifact, MinutesArtifact, TranscriptArtifact, TranscriptSegment
 from .errors import (
     ChunkingError,
     ComponentError,
@@ -6,6 +6,7 @@ from .errors import (
     FfmpegError,
     InputValidationError,
     MinutesGenerationError,
+    PandocError,
     PipelineError,
     ProviderResponseError,
     ProviderRetryExhaustedError,
@@ -19,6 +20,7 @@ __all__ = [
     "TranscriptArtifact",
     "TranscriptSegment",
     "MinutesArtifact",
+    "DocxArtifact",
     "ArtifactRefs",
     "Manifest",
     "StepRecord",
@@ -31,6 +33,7 @@ __all__ = [
     "ChunkingError",
     "TranscriptionError",
     "MinutesGenerationError",
+    "PandocError",
     "ProviderResponseError",
     "ProviderRetryExhaustedError",
 ]

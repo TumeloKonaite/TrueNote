@@ -64,6 +64,32 @@ class _FakeMinutesLLM:
         )
 
 
+class _FakeDocxExporter:
+    def __init__(self) -> None:
+        self.calls: list[dict[str, object]] = []
+
+    def markdown_to_docx(
+        self,
+        input_markdown_path: Path,
+        output_docx_path: Path,
+        *,
+        reference_docx_path: Path | None = None,
+        toc: bool = False,
+        toc_depth: int = 2,
+    ) -> Path:
+        self.calls.append(
+            {
+                "input_markdown_path": input_markdown_path,
+                "output_docx_path": output_docx_path,
+                "reference_docx_path": reference_docx_path,
+                "toc": toc,
+                "toc_depth": toc_depth,
+            }
+        )
+        output_docx_path.write_bytes(b"fake-docx")
+        return output_docx_path
+
+
 class PredictionPipelineTests(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
@@ -113,6 +139,44 @@ class PredictionPipelineTests(unittest.TestCase):
         self.assertIsNotNone(persisted.artifacts.transcript_sha256)
         self.assertIsNotNone(persisted.artifacts.minutes_sha256)
         self.assertEqual((output_dir / "minutes.md").read_text(encoding="utf-8").strip(), "# Minutes\n\n- hello world")
+        self.assertEqual(persisted.steps["export_docx"].status, "skipped")
+
+    def test_run_success_exports_docx_when_enabled(self) -> None:
+        output_dir = self.tmp_dir / "artifacts_docx"
+        provider = _ManifestAwareProvider(output_dir / "manifest.json")
+        docx_exporter = _FakeDocxExporter()
+        reference_docx_path = self.tmp_dir / "reference.docx"
+        reference_docx_path.write_bytes(b"ref")
+
+        config = self._config(output_dir, provider)
+        config = PipelineConfig(
+            output_dir=config.output_dir,
+            normalizer=config.normalizer,
+            ffmpeg=config.ffmpeg,
+            transcription_provider=config.transcription_provider,
+            minutes_llm=config.minutes_llm,
+            chunk_seconds=config.chunk_seconds,
+            docx_exporter=docx_exporter,
+            prompt_path=config.prompt_path,
+            prompt_version=config.prompt_version,
+            minutes_extra_context=config.minutes_extra_context,
+            export_minutes_docx=True,
+            reference_docx_path=reference_docx_path,
+            docx_toc=True,
+            docx_toc_depth=2,
+            include_error_traceback=config.include_error_traceback,
+            run_id=config.run_id,
+        )
+
+        manifest = run(self.input_path, config)
+
+        self.assertEqual(manifest.steps["export_docx"].status, "success")
+        self.assertEqual(manifest.artifacts.minutes_docx_path, "minutes.docx")
+        self.assertIsNotNone(manifest.artifacts.minutes_docx_sha256)
+        self.assertTrue((output_dir / "minutes.docx").exists())
+        self.assertEqual(len(docx_exporter.calls), 1)
+        self.assertEqual(docx_exporter.calls[0]["reference_docx_path"], reference_docx_path)
+        self.assertIs(docx_exporter.calls[0]["toc"], True)
 
     def test_run_failure_persists_failed_step_error_context(self) -> None:
         output_dir = self.tmp_dir / "artifacts_fail"

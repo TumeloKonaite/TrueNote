@@ -51,3 +51,10 @@ class MinutesArtifact:
     prompt_version: str | None = None
     tokens: dict[str, Any] | None = None
     meta: dict[str, Any] | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class DocxArtifact:
+    path: Path
+    sha256: str
+    meta: dict[str, Any] | None = None
